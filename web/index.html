@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Полив сада</title>
+<link rel="stylesheet" href="../../shared/common.css">
+<link rel="stylesheet" href="../../shared/styles.css">
+<style>
+:root {
+  --bg: var(--bg);
+  --bg2: var(--bg2);
+  --bg3: var(--bg3);
+  --border: var(--border);
+  --accent: var(--accent);
+  --accent2: var(--accent2);
+  --muted: var(--muted);
+  --text: var(--text);
+  --text-dim: var(--text-dim);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-main, 'JetBrains Mono', monospace); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 30px 20px; }
+.container { max-width: 800px; width: 100%; }
+h1 { font-size: 1.3rem; margin-bottom: 24px; color: var(--accent); display: flex; align-items: center; gap: 12px; font-weight: 400; letter-spacing: 0.04em; flex-wrap: wrap; }
+h1 small { font-size: 0.7rem; color: var(--muted); font-weight: normal; letter-spacing: 0.1em; text-transform: uppercase; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.card { background: var(--bg2); border: 1px solid var(--border); padding: 16px; }
+.card .label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 6px; }
+.card .value { font-size: 1.6rem; font-weight: 500; color: var(--accent); }
+.card .value.wet { color: #6ab0f0; }
+.card .value.danger { color: #e05555; }
+.card .value.ok { color: #4ddf8f; }
+.card .sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.04em; }
+.controls { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 1px solid var(--border); background: var(--bg2); color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all .12s ease; }
+.btn:hover { background: var(--bg3); border-color: var(--accent2); color: var(--accent); }
+.btn.active { border-color: var(--accent2); color: var(--accent); background: var(--bg3); }
+.btn-pump.active { border-color: #4ddf8f; color: #4ddf8f; box-shadow: 0 0 14px rgba(77,223,143,0.15); }
+.btn-light.active { border-color: #f0c060; color: #f0c060; box-shadow: 0 0 14px rgba(240,192,96,0.15); }
+.section-title { font-size: 0.6rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; padding-top: 4px; }
+.relay-card { background: var(--bg2); border: 1px solid var(--border); padding: 16px; margin-bottom: 14px; }
+.relay-card.relay-pump { border-left: 3px solid #4ddf8f; }
+.relay-card.relay-light { border-left: 3px solid #f0c060; }
+.relay-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.relay-head .dot { width: 8px; height: 8px; border-radius: 50%; }
+.relay-head .dot.pump-dot { background: #4ddf8f; }
+.relay-head .dot.light-dot { background: #f0c060; }
+.relay-head .name { font-size: 0.95rem; color: var(--accent); letter-spacing: 0.06em; }
+.mode-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.mode-tab { padding: 6px 12px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 0.7rem; letter-spacing: 0.05em; cursor: pointer; font-family: inherit; transition: all .12s ease; text-transform: uppercase; }
+.mode-tab:hover { border-color: var(--accent2); color: var(--accent); }
+.mode-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.mode-fields { display: none; gap: 10px; align-items: end; flex-wrap: wrap; }
+.mode-fields.active { display: flex; }
+.mode-field { display: flex; flex-direction: column; gap: 4px; }
+.mode-field label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.mode-field input { background: var(--bg2); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; padding: 6px 10px; font-size: 0.75rem; outline: none; width: 90px; }
+.mode-field input:focus { border-color: var(--accent2); }
+.btn-apply { margin-top: 10px; }
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.config-item { display: flex; flex-direction: column; gap: 4px; }
+.config-item label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.config-item input { background: var(--bg2); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; padding: 6px 10px; font-size: 0.75rem; outline: none; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+.status-dot.online { background: #4ddf8f; }
+.status-dot.offline { background: #e05555; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border); padding: 12px 20px; font-size: 0.75rem; opacity: 0; transition: .3s; pointer-events: none; z-index: 100; }
+.toast.show { opacity: 1; }
+.event-log { background: var(--bg2); border: 1px solid var(--border); padding: 12px; max-height: 280px; overflow-y: auto; }
+.event-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.75rem; }
+.event-row:last-child { border-bottom: none; }
+.event-row .ev-time { white-space: nowrap; min-width: 130px; display: flex; gap: 6px; }
+.event-row .ev-date { color: var(--muted); font-size: 0.6rem; letter-spacing: 0.06em; }
+.event-row .ev-timeonly { color: var(--text-dim); font-size: 0.68rem; letter-spacing: 0.04em; }
+.event-row .ev-msg { color: var(--text); flex: 1; }
+.event-row.relay .ev-msg { color: #6ab0f0; }
+.event-row.leak .ev-msg { color: #e05555; }
+.event-empty { color: var(--muted); font-size: 0.7rem; padding: 10px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Полив сада <small id="statusBadge"><span class="status-dot offline"></span>нет связи</small> <small id="serverTime" style="color:var(--muted);font-weight:normal;letter-spacing:0.05em"></small></h1>
+
+  <div class="grid">
+    <div class="card"><div class="label">Вода</div><div class="value" id="leakRawVal">---</div><div class="sub" id="leakRawSub">raw: ---</div></div>
+    <div class="card"><div class="label">Протечка</div><div class="value ok" id="leakVal">OK</div><div class="sub">MH-Sensor</div></div>
+    <div class="card"><div class="label">Насос</div><div class="value" id="pumpVal">ВЫКЛ</div><div class="sub" id="pumpTime">---</div></div>
+    <div class="card"><div class="label">Свет</div><div class="value" id="lightVal">ВЫКЛ</div><div class="sub">---</div></div>
+  </div>
+
+  <div class="section-title">Управление (ручное)</div>
+  <div class="controls">
+    <button class="btn btn-pump" id="btnPump" onclick="togglePump()">Насос</button>
+    <button class="btn btn-light" id="btnLight" onclick="toggleLight()">Свет</button>
+  </div>
+
+  <div class="section-title">Режим работы</div>
+
+  <div class="relay-card relay-pump">
+    <div class="relay-head"><span class="dot pump-dot"></span><span class="name">Насос</span></div>
+    <div class="mode-tabs" id="pumpModeTabs">
+      <button class="mode-tab active" data-mode="0" onclick="selectMode('pump',0)">Выкл</button>
+      <button class="mode-tab" data-mode="1" onclick="selectMode('pump',1)">Время старта</button>
+      <button class="mode-tab" data-mode="2" onclick="selectMode('pump',2)">Обратный отсчёт</button>
+      <button class="mode-tab" data-mode="3" onclick="selectMode('pump',3)">Цикличный таймер</button>
+    </div>
+    <div class="mode-fields" id="pumpFields"></div>
+    <button class="btn btn-apply" onclick="applyRelayConfig('pump')">Применить</button>
+  </div>
+
+  <div class="relay-card relay-light">
+    <div class="relay-head"><span class="dot light-dot"></span><span class="name">Свет</span></div>
+    <div class="mode-tabs" id="lightModeTabs">
+      <button class="mode-tab active" data-mode="0" onclick="selectMode('light',0)">Выкл</button>
+      <button class="mode-tab" data-mode="1" onclick="selectMode('light',1)">Время старта</button>
+      <button class="mode-tab" data-mode="2" onclick="selectMode('light',2)">Обратный отсчёт</button>
+      <button class="mode-tab" data-mode="3" onclick="selectMode('light',3)">Цикличный таймер</button>
+    </div>
+    <div class="mode-fields" id="lightFields"></div>
+    <button class="btn btn-apply" onclick="applyRelayConfig('light')">Применить</button>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">События</div>
+  <div class="event-log" id="eventLog"><div class="event-empty">Загрузка…</div></div>
+
+  <div class="section-title" style="margin-top:24px">Настройки</div>
+  <div class="config-grid">
+    <div class="config-item"><label>Порог протечки</label><input type="number" id="cfgLeakThr" value="300"></div>
+  </div>
+  <button class="btn" onclick="saveConfig()" style="margin-top:10px;border-color:var(--accent2);color:var(--accent)">Сохранить</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/common.js"></script>
+<script>
+const API = '/garden';
+let state = { pump: 0, light: 0 };
+let relayConfigs = { pump: null, light: null };
+let selectedMode = { pump: 0, light: 0 };
+
+function $(id) { return document.getElementById(id); }
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function fetchJSON(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(r.statusText);
+  return r.json();
+}
+
+function renderState(s) {
+  $('leakRawVal').textContent = s.leak_raw != null ? (s.leak_raw > 512 ? 'МОКРО!' : s.leak_raw > 100 ? 'СЫРО' : 'СУХО') : '---';
+  $('leakRawVal').className = 'value ' + (s.leak_raw != null ? (s.leak_raw > 512 ? 'danger' : 'wet') : '');
+  $('leakRawSub').textContent = 'raw: ' + (s.leak_raw ?? '---');
+  $('leakVal').textContent = s.leak ? 'ПРОТЕЧКА!' : 'OK';
+  $('leakVal').className = 'value ' + (s.leak ? 'danger' : 'ok');
+  $('pumpVal').textContent = s.pump ? 'ВКЛ' : 'ВЫКЛ';
+  $('pumpVal').className = 'value ' + (s.pump ? 'ok' : '');
+  $('btnPump').classList.toggle('active', s.pump);
+  $('lightVal').textContent = s.light ? 'ВКЛ' : 'ВЫКЛ';
+  $('lightVal').className = 'value ' + (s.light ? 'wet' : '');
+  $('btnLight').classList.toggle('active', s.light);
+  state.pump = s.pump ? 1 : 0;
+  state.light = s.light ? 1 : 0;
+}
+
+async function updateStatus() {
+  try {
+    const data = await fetchJSON(API + '/api/status');
+    if (data.server_time) {
+      $('serverTime').textContent = data.server_time.slice(11);
+    }
+    if (data.esp_online) {
+      const s = data.sensor || {};
+      const rssi = s.rssi != null ? s.rssi : '?';
+      const ssid = s.ssid || '?';
+      $('statusBadge').innerHTML = '<span class="status-dot online"></span>online ' + $('serverTime').textContent + ' | ' + ssid + ' ' + rssi + 'dBm';
+    } else {
+      $('statusBadge').innerHTML = '<span class="status-dot offline"></span>нет связи с ESP';
+    }
+    if (data.sensor) renderState(data.sensor);
+    if (data.config) {
+      if (data.config.leak_threshold != null) $('cfgLeakThr').value = data.config.leak_threshold;
+    }
+  } catch(e) {
+    $('statusBadge').innerHTML = '<span class="status-dot offline"></span>сервер недоступен';
+  }
+}
+
+function updateUI() {
+  $('pumpVal').textContent = state.pump ? 'ВКЛ' : 'ВЫКЛ';
+  $('pumpVal').className = 'value ' + (state.pump ? 'ok' : '');
+  $('btnPump').classList.toggle('active', state.pump);
+  $('lightVal').textContent = state.light ? 'ВКЛ' : 'ВЫКЛ';
+  $('lightVal').className = 'value ' + (state.light ? 'wet' : '');
+  $('btnLight').classList.toggle('active', state.light);
+}
+
+async function togglePump() {
+  state.pump = state.pump ? 0 : 1;
+  updateUI();
+  try {
+    await fetchJSON(API + '/api/pump', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({state: state.pump})
+    });
+    toast(state.pump ? 'Насос ВКЛ' : 'Насос ВЫКЛ');
+  } catch(e) { toast('Ошибка'); }
+}
+
+async function toggleLight() {
+  state.light = state.light ? 0 : 1;
+  updateUI();
+  try {
+    await fetchJSON(API + '/api/light', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({state: state.light})
+    });
+    toast(state.light ? 'Свет ВКЛ' : 'Свет ВЫКЛ');
+  } catch(e) { toast('Ошибка'); }
+}
+
+function selectMode(relay, mode) {
+  selectedMode[relay] = mode;
+  const tabsId = relay + 'ModeTabs';
+  const tabs = $(tabsId).querySelectorAll('.mode-tab');
+  tabs.forEach(t => t.classList.toggle('active', +t.dataset.mode === mode));
+  const fields = $(relay + 'Fields');
+  fields.classList.add('active');
+  renderModeFields(relay);
+}
+
+function renderModeFields(relay) {
+  const c = relayConfigs[relay] || {};
+  const mode = selectedMode[relay];
+  const fieldsEl = $(relay + 'Fields');
+  let html = '';
+
+  if (mode === 1) {
+    const hOn = String(c.h_on ?? 6).padStart(2, '0');
+    const mOn = String(c.m_on ?? 0).padStart(2, '0');
+    const durMin = Math.floor((c.count_sec ?? 0) / 60);
+    html = `
+      <div class="mode-field"><label>Время старта</label><input type="time" class="fld-timeOn" value="${hOn}:${mOn}"></div>
+      <div class="mode-field"><label>Длительность (мин)</label><input type="number" class="fld-countMin" value="${durMin || 0}" min="1"></div>
+    `;
+  } else if (mode === 2) {
+    const totalMin = Math.floor((c.count_sec ?? 0) / 60);
+    html = `
+      <div class="mode-field"><label>Длительность (мин)</label><input type="number" class="fld-countMin" value="${totalMin}" min="1"></div>
+    `;
+  } else if (mode === 3) {
+    html = `
+      <div class="mode-field"><label>Вкл (сек)</label><input type="number" class="fld-cycleOn" value="${c.cycle_on_sec ?? 60}" min="1"></div>
+      <div class="mode-field"><label>Выкл (сек)</label><input type="number" class="fld-cycleOff" value="${c.cycle_off_sec ?? 300}" min="1"></div>
+    `;
+  }
+  fieldsEl.innerHTML = html;
+}
+
+function gatherConfigPayload(relay) {
+  const mode = selectedMode[relay];
+  const fieldsEl = $(relay + 'Fields');
+  const payload = { relay, mode, h_on:0, m_on:0, h_off:0, m_off:0, count_sec:0, cycle_on_sec:0, cycle_off_sec:0 };
+  
+  if (mode === 1) {
+    const on = fieldsEl.querySelector('.fld-timeOn').value.split(':');
+    const min = +fieldsEl.querySelector('.fld-countMin').value || 0;
+    payload.h_on = +on[0]; payload.m_on = +on[1];
+    payload.count_sec = min * 60;
+  } else if (mode === 2) {
+    const min = +fieldsEl.querySelector('.fld-countMin').value || 0;
+    payload.count_sec = min * 60;
+  } else if (mode === 3) {
+    payload.cycle_on_sec = +fieldsEl.querySelector('.fld-cycleOn').value || 60;
+    payload.cycle_off_sec = +fieldsEl.querySelector('.fld-cycleOff').value || 300;
+  }
+  return payload;
+}
+
+async function applyRelayConfig(relay) {
+  const payload = gatherConfigPayload(relay);
+  try {
+    const saved = await fetchJSON(API + '/api/relay_configs', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    relayConfigs[relay] = saved;
+    toast((relay === 'pump' ? 'Насос' : 'Свет') + ': режим применён');
+  } catch(e) { toast('Ошибка применения'); }
+}
+
+async function loadRelayConfigs() {
+  try {
+    const list = await fetchJSON(API + '/api/relay_configs');
+    list.forEach(c => {
+      relayConfigs[c.relay] = c;
+    });
+    ['pump', 'light'].forEach(r => {
+      const c = relayConfigs[r];
+      if (c) selectMode(r, c.mode);
+    });
+  } catch(e) {}
+}
+
+async function loadEvents() {
+  try {
+    const events = await fetchJSON(API + '/api/events?limit=30');
+    const el = $('eventLog');
+    if (!events.length) { el.innerHTML = '<div class="event-empty">Нет событий</div>'; return; }
+    el.innerHTML = events.map(e => {
+      const d = e.created_at ? new Date(e.created_at + 'Z').toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'}) : '--.--'; const t = e.created_at ? new Date(e.created_at + 'Z').toLocaleTimeString('ru-RU', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '--:--:--';
+      return '<div class="event-row ' + e.event_type + '"><span class="ev-time"><span class="ev-date">' + d + '</span><span class="ev-timeonly">' + t + '</span></span><span class="ev-msg">' + e.message + '</span></div>';
+    }).join('');
+  } catch(e) {
+    $('eventLog').innerHTML = '<div class="event-empty">Ошибка загрузки</div>';
+  }
+}
+
+async function saveConfig() {
+  const thr = parseInt($('cfgLeakThr').value);
+  await fetchJSON(API + '/api/config', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({leak_threshold: thr})
+  });
+  toast('Настройки сохранены');
+}
+
+// Init
+loadRelayConfigs();
+loadEvents();
+updateStatus();
+setInterval(updateStatus, 5000);
+setInterval(loadEvents, 10000);
+</script>
+</body>
+</html>

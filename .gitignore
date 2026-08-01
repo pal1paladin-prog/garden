@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# SQLite database
+*.db
+*.sqlite3
+
+# PlatformIO
+.pio/
+.vscode/
