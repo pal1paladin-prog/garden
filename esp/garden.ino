@@ -95,6 +95,10 @@ void applyCfg(bool isPump, const char* payload) {
 
 void timerTick(RelayState& rs, const RelayCfg& cfg) {
   if (rs.manualOn) return;
+  if (rs.pin == PUMP_PIN && leak) {
+    if (rs.active) setRelay(rs, false);
+    return;
+  }
   if (cfg.mode == 0) {
     if (rs.active) setRelay(rs, false);
     return;
@@ -257,7 +261,6 @@ void leakCheck() {
     }
   }
 }
-
 void pumpTimeoutCheck() {
   if (pump.active && pump.manualOn && millis() - pump.tStart > PUMP_TO) {
     pump.manualOn = false;
